@@ -49,11 +49,19 @@ jobs:
         source-version: ${{ env.CURRENT_VERSION }}
         target-version: ${{ env.GH_OLLAMA_OLLAMA_LATEST_TAG }}
 
+    - name: Telegram Notification - Latest Tag
+      if: success() && env.GH_OLLAMA_OLLAMA_LATEST_TAG != env.CURRENT_VERSION
+      uses: brainxio/telegram-bot-action@v1
+      with:
+        bot_token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+        chat_id: ${{ secrets.TELEGRAM_CHAT_ID }}
+        message: "🔍 Fetched latest Ollama tag: ${{ env.GH_OLLAMA_OLLAMA_LATEST_TAG }}"
+
     - name: Create New Tag and Push Changes
       if: success() && env.GH_OLLAMA_OLLAMA_LATEST_TAG != env.CURRENT_VERSION
       run: |
         echo "Creating new tag ${GH_OLLAMA_OLLAMA_LATEST_TAG}..."
-        git tag "${GH_OLLAMA_OLLAMA_LATEST_TAG}"
+        git tag -a "${GH_OLLAMA_OLLAMA_LATEST_TAG}" -m "Auto tag: ${GH_OLLAMA_OLLAMA_LATEST_TAG}"
         git push origin "${GH_OLLAMA_OLLAMA_LATEST_TAG}"
         echo "🚀 Created and pushed new tag ${GH_OLLAMA_OLLAMA_LATEST_TAG}."
 
@@ -64,14 +72,6 @@ jobs:
         bot_token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
         chat_id: ${{ secrets.TELEGRAM_CHAT_ID }}
         message: "🏷️ Created and pushed new tag: ${{ env.GH_OLLAMA_OLLAMA_LATEST_TAG }}"
-
-    - name: Telegram Notification - Latest Tag
-      if: success() && env.GH_OLLAMA_OLLAMA_LATEST_TAG != env.CURRENT_VERSION
-      uses: brainxio/telegram-bot-action@v1
-      with:
-        bot_token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-        chat_id: ${{ secrets.TELEGRAM_CHAT_ID }}
-        message: "🔍 Fetched latest Ollama tag: ${{ env.GH_OLLAMA_OLLAMA_LATEST_TAG }}"
 
     - name: Telegram Notification - Error
       if: ${{ failure() }}
