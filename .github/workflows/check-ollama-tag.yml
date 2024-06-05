@@ -57,10 +57,27 @@ jobs:
     - name: Create New Tag and Push Changes
       if: success() && env.GH_OLLAMA_OLLAMA_LATEST_TAG != env.CURRENT_VERSION
       run: |
-        echo "Creating new tag ${GH_OLLAMA_OLLAMA_LATEST_TAG}..."
-        git tag -a "${GH_OLLAMA_OLLAMA_LATEST_TAG}" -m "Auto tag: ${GH_OLLAMA_OLLAMA_LATEST_TAG}"
-        git push origin "${GH_OLLAMA_OLLAMA_LATEST_TAG}"
-        echo "🚀 Created and pushed new tag ${GH_OLLAMA_OLLAMA_LATEST_TAG}."
+        # Determine the new version
+        NEW_VERSION=${{ env.HIGHEST_VERSION }}
+        
+        # Generate changelog
+        echo "# Changelog" > CHANGELOG.md
+        echo "## Version $NEW_VERSION" >> CHANGELOG.md
+        echo "- Your changelog entry here" >> CHANGELOG.md
+        echo "📝 Updated changelog."
+
+        # Commit the changes
+        git config --global user.email "actions@github.com"
+        git config --global user.name "GitHub Actions"
+        git add CHANGELOG.md
+        git commit -m "chore: Update changelog and version to $NEW_VERSION"
+        echo "📝 Committed changelog and version update."
+
+        # Tag and push the changes
+        git tag "$NEW_VERSION"
+        git push origin main --tags
+        echo "🚀 Created new tag ${GH_OLLAMA_OLLAMA_LATEST_TAG}."
+        echo "🚀 Pushed changes to repository."
 
     - name: Telegram Notification - New Tag Created
       if: success() && env.GH_OLLAMA_OLLAMA_LATEST_TAG != env.CURRENT_VERSION
