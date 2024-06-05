@@ -24,7 +24,7 @@ jobs:
       run: |
         git fetch --tags
         echo "CURRENT_VERSION=$(git describe --tags `git rev-list --tags --max-count=1`)" >> $GITHUB_ENV
-        echo "🤖 Fetched repository tag."
+        echo "📝 Fetched repository tag."
 
     - name: Fetch Ollama Tag
       id: ollama-tag
@@ -36,29 +36,21 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       continue-on-error: true
 
-    - name: Check if Newer Tag
-      if: ${{ success() && env.GH_OLLAMA_OLLAMA_LATEST_TAG != env.CURRENT_VERSION }}
-      run: echo "::set-output name=newer_tag::true"
-      
-    - name: Print Latest Tag
-      run: |
-        echo "Repo Tag ${{ env.CURRENT_VERSION }}"
-        echo "Latest Tag ${{ env.GH_OLLAMA_OLLAMA_LATEST_TAG }}"
-
     - name: Compare Versions
-      if: ${{ success() && steps.check-if-newer-tag.outputs.newer_tag == 'true' }}
+      if: success() && env.GH_OLLAMA_OLLAMA_LATEST_TAG != env.CURRENT_VERSION
+      id: compare-versions
       uses: brainxio/compare-versions@v1
       with:
         source-version: ${{ env.CURRENT_VERSION }}
         target-version: ${{ env.GH_OLLAMA_OLLAMA_LATEST_TAG }}
 
     - name: Telegram Notification - Latest Tag
-      if: ${{ success() && steps.check-if-newer-tag.outputs.newer_tag == 'true' }}
+      if: steps.compare-versions.outputs.result == 'newer'
       uses: brainxio/telegram-bot-action@v1
       with:
         bot_token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
         chat_id: ${{ secrets.TELEGRAM_CHAT_ID }}
-        message: "✅ Fetched latest Ollama tag: ${{ env.GH_OLLAMA_OLLAMA_LATEST_TAG }}"
+        message: "🔍 Fetched latest Ollama tag: ${{ env.GH_OLLAMA_OLLAMA_LATEST_TAG }}"
 
     - name: Telegram Notification - Error
       if: ${{ failure() }}
