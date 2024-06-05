@@ -1,9 +1,6 @@
 name: 'Check for Latest Ollama Tag'
 
 on:
-  push:
-    branches:
-      - main
   workflow_dispatch:
   schedule:
     - cron: '0 0 * * *'
