@@ -1,0 +1,296 @@
+name: Docker-C.I.C.D.
+
+on:
+  push:
+    branches:
+      - main
+      - 'feature/*'
+      - 'hotfix/*'
+      - 'bugfix/*'
+    paths-ignore:
+      - '*.md'
+    tags:
+      - 'v*'
+  pull_request:
+    branches:
+      - main
+    paths-ignore:
+      - '*.md'
+  workflow_dispatch:
+
+
+jobs:
+  workflow_info:
+    name: Workflow Info
+    runs-on: ubuntu-latest
+    steps:
+      - name: Wake-up Telegram
+        uses: brainxio/telegram-bot-action@v1
+        with:
+          bot_token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          chat_id: ${{ secrets.TELEGRAM_CHAT_ID }}
+          message: "🤖"
+
+      - name: Workflow Telegram
+        uses: brainxio/telegram-bot-action@v1
+        with:
+          bot_token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          chat_id: ${{ secrets.TELEGRAM_CHAT_ID }}
+          message: |
+            🔍 **Workflow Details**
+
+            🏷️ Repository: `${{ github.repository }}`
+            🌿 Branch: `${{ github.ref_name }}`
+            🔧 Workflow Name: `${{ github.workflow }}`
+            🏃 Run ID: `${{ github.run_id }}`
+            🔢 Run Number: `${{ github.run_number }}`
+            🔁 Run Attempt: `${{ github.run_attempt }}`
+            👤 Actor: `${{ github.actor }}`
+
+            ⚡️ *Sending this message via GitHub Actions from your friendly neighborhood bot*
+          parse_mode: 'Markdown'
+
+  build_dev:
+    name: Build Development
+    runs-on: ubuntu-latest
+    needs: workflow_info
+    if: |
+      startsWith(github.ref, 'refs/heads/feature/') || 
+      startsWith(github.ref, 'refs/heads/hotfix/') || 
+      startsWith(github.ref, 'refs/heads/bugfix/')
+    steps:
+      - name: Dev-Build Telegram
+        uses: brainxio/telegram-bot-action@v1
+        with:
+          bot_token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          chat_id: ${{ secrets.TELEGRAM_CHAT_ID }}
+          message: |
+            🛠 Develop build started!
+            🏃 Run ID: `${{ github.run_id }}`
+            🔢 Run Number: `${{ github.run_number }}`
+            🔁 Run Attempt: `${{ github.run_attempt }}`
+            👤 Actor: `${{ github.actor }}`
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set APP_NAME
+        run: echo "APP_NAME=$(echo ${{ github.repository }} | cut -d '/' -f2  | sed 's/-container$//' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+
+      - name: Set Development Version
+        run: |
+          BRANCH=$(echo "${GITHUB_REF_NAME}" | sed 's/\//-/g')
+          IMAGE_TAG="${BRANCH}-${GITHUB_RUN_NUMBER}-${GITHUB_RUN_ATTEMPT}"
+          echo "IMAGE_TAG=${IMAGE_TAG}" >> $GITHUB_ENV
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Create and boot a builder instance
+        run: docker buildx create --use
+
+      - name: Login to DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push Docker image to DockerHub
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: Dockerfile
+          push: true
+          platforms: linux/amd64,linux/arm64
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.APP_NAME }}:${{ env.IMAGE_TAG }}
+          cache-from: type=gha
+
+      - name: Run Development Tests Placeholder
+        run: echo "Running development tests... Replace with actual test commands."
+
+      - name: Save Docker image as an artifact
+        run: docker save ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.APP_NAME }}:${{ env.IMAGE_TAG }} | gzip > ${{ github.workspace }}/${{ env.APP_NAME }}_${{ env.IMAGE_TAG }}_dev.tar.gz
+
+      - name: Upload Docker image artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.APP_NAME }}_${{ env.IMAGE_TAG }}_dev_image
+          path: ${{ github.workspace }}/${{ env.APP_NAME }}_${{ env.IMAGE_TAG }}_dev.tar.gz
+
+  build_prod:
+    name: Build Production
+    runs-on: ubuntu-latest
+    needs: workflow_info
+    if: startsWith(github.ref, 'refs/heads/main') || startsWith(github.ref, 'refs/tags/v') 
+    steps:
+      - name: Prod-Build Telegram
+        uses: brainxio/telegram-bot-action@v1
+        with:
+          bot_token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          chat_id: ${{ secrets.TELEGRAM_CHAT_ID }}
+          message: |
+            🛠 Production build started!
+            🏃 Run ID: `${{ github.run_id }}`
+            🔢 Run Number: `${{ github.run_number }}`
+            🔁 Run Attempt: `${{ github.run_attempt }}`
+            👤 Actor: `${{ github.actor }}`
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set APP_NAME
+        run: echo "APP_NAME=$(echo ${{ github.repository }} | cut -d '/' -f2  | sed 's/-container$//' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+
+      - name: Load Image Tag from Git Tag
+        run: echo "IMAGE_TAG=${GITHUB_REF##*/}" >> $GITHUB_ENV
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Create and boot a builder instance
+        run: docker buildx create --use
+
+      - name: Login to DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push Docker image to DockerHub
+        if: startsWith(github.ref, 'refs/heads/main') || startsWith(github.ref, 'refs/tags/v') 
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: Dockerfile
+          push: true
+          platforms: linux/amd64,linux/arm64
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.APP_NAME }}:${{ env.IMAGE_TAG }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.APP_NAME }}:latest
+          cache-from: type=gha
+
+      - name: Save Docker image as an artifact
+        run: docker save ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.APP_NAME }}:${{ env.IMAGE_TAG }} | gzip > ${{ github.workspace }}/${{ env.APP_NAME }}_${{ env.IMAGE_TAG }}_prod.tar.gz
+
+      - name: Upload Docker image artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.APP_NAME }}_${{ env.IMAGE_TAG }}_prod_image
+          path: ${{ github.workspace }}/${{ env.APP_NAME }}_${{ env.IMAGE_TAG }}_prod.tar.gz
+
+  generate_changelog:
+    name: Generate Changelog
+    runs-on: ubuntu-latest
+    needs: build_prod
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.PAT_TOKEN }}
+
+      - name: Load Image Tag from Git Tag
+        run: echo "IMAGE_TAG=${GITHUB_REF##*/}" >> $GITHUB_ENV
+
+      - name: Switch to main branch
+        run: git checkout main
+
+      - name: Git Config
+        run: |
+          git config --global user.email "${{ github.actor }}@users.noreply.github.com"
+          git config --global user.name "BrainXio CI"
+
+      - name: Create Changelog
+        run: |
+          git fetch --all --tags
+          LATEST_TAG=$(git describe --tags `git rev-list --tags --max-count=1`)
+          echo "# Changelog" > CHANGELOG.md
+          echo "## Version ${GITHUB_REF##*/}" >> CHANGELOG.md
+          echo '### Commits' >> CHANGELOG.md
+          git log $LATEST_TAG..HEAD --pretty=format:"- %s (%an)" >> CHANGELOG.md
+          git add CHANGELOG.md
+          if git diff-index --quiet HEAD --; then
+            echo "No changes to commit"
+          else
+            git commit -m "Update CHANGELOG for ${GITHUB_REF##*/}"
+            git push origin main
+          fi
+
+      - name: Changelog Telegram
+        uses: brainxio/telegram-bot-action@v1
+        with:
+          bot_token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          chat_id: ${{ secrets.TELEGRAM_CHAT_ID }}
+          message: |
+            📋 **Changelog Updated**
+
+            🌿 Branch: `main`
+            🔢 Version: `${{ env.IMAGE_TAG }}`
+
+            [View CHANGELOG.md](https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md)
+
+  release_dev:
+    name: Release Development
+    runs-on: ubuntu-latest
+    needs: build_dev
+    if: startsWith(github.ref, 'refs/heads/feature/')
+    steps:
+      - name: Set APP_NAME
+        run: echo "APP_NAME=$(echo ${{ github.repository }} | cut -d '/' -f2  | sed 's/-container$//' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+
+      - name: Load Image Tag from Artifacts
+        run: |
+          BRANCH=$(echo "${GITHUB_REF_NAME}" | sed 's/\//-/g')
+          IMAGE_TAG="${BRANCH}-${GITHUB_RUN_NUMBER}-${GITHUB_RUN_ATTEMPT}"
+          echo "IMAGE_TAG=${IMAGE_TAG}" >> $GITHUB_ENV
+
+      - name: Deploy to Development Environment
+        run: echo "Deploying ${{ env.APP_NAME }}:${{ env.IMAGE_TAG }} to development environment."
+
+      - name: Dev-Release Telegram
+        if: success()
+        uses: brainxio/telegram-bot-action@v1
+        with:
+          bot_token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          chat_id: ${{ secrets.TELEGRAM_CHAT_ID }}
+          message: |
+            🤖 **Development Build Deployed**
+
+            🌿 Branch: `${{ github.ref_name }}`
+            🔢 Version: `${{ env.IMAGE_TAG }}`
+            🐳 Image: `docker pull ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.APP_NAME }}:${{ env.IMAGE_TAG }}`
+
+  release_prod:
+    name: Release Production
+    runs-on: ubuntu-latest
+    needs: [build_prod, generate_changelog]
+    if: startsWith(github.ref, 'refs/tags/v')
+    steps:
+      - name: Set APP_NAME
+        run: echo "APP_NAME=$(echo ${{ github.repository }} | cut -d '/' -f2  | sed 's/-container$//' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+
+      - name: Load Image Tag from Git Tag
+        run: echo "IMAGE_TAG=${GITHUB_REF##*/}" >> $GITHUB_ENV
+
+      - name: Deploy to Production Environment
+        run: echo "Deploying ${{ env.APP_NAME }}:${{ env.IMAGE_TAG }} to production environment."
+
+      - name: Prod-Release Telegram
+        if: success()
+        uses: brainxio/telegram-bot-action@v1
+        with:
+          bot_token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          chat_id: ${{ secrets.TELEGRAM_CHAT_ID }}
+          message: |
+            🤖 **Production Release Deployed**
+
+            🌿 Branch: `main`
+            🔢 Version: `${{ env.IMAGE_TAG }}`
+            🐳 Image: `docker pull ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.APP_NAME }}:${{ env.IMAGE_TAG }}`
