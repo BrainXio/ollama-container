@@ -9,7 +9,7 @@
     </div>
 </div>
 
-[![Docker-CICD](https://github.com/BrainXio/ollama-container/actions/workflows/docker-cicd.yml/badge.svg)](https://github.com/BrainXio/ollama-container/actions/workflows/docker-cicd.yml)
+[![Check Ollama Tag](https://github.com/BrainXio/ollama-container/actions/workflows/check-ollama-tag.yml/badge.svg)](https://github.com/BrainXio/ollama-container/actions/workflows/check-ollama-tag.yml) [![Docker-CICD](https://github.com/BrainXio/ollama-container/actions/workflows/docker-cicd.yml/badge.svg)](https://github.com/BrainXio/ollama-container/actions/workflows/docker-cicd.yml)
 
 ## Features
 
