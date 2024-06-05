@@ -4,15 +4,22 @@ on:
   push:
     branches:
       - main
-  schedule:
-    - cron: '0 * * * *' # Run hourly
   workflow_dispatch:
+  schedule:
+    - cron: '0 0 * * *'
 
 jobs:
   ollama-version-tracker:
     runs-on: ubuntu-latest
 
     steps:
+    - name: Wake-up Telegram
+      uses: brainxio/telegram-bot-action@v1
+      with:
+        bot_token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+        chat_id: ${{ secrets.TELEGRAM_CHAT_ID }}
+        message: "🤖"
+
     - name: Checkout code
       uses: actions/checkout@v4
       with:
@@ -36,16 +43,8 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       continue-on-error: true
 
-    - name: Compare Versions
-      if: success() && env.GH_OLLAMA_OLLAMA_LATEST_TAG != env.CURRENT_VERSION
-      id: compare-versions
-      uses: brainxio/compare-versions@v1
-      with:
-        source-version: ${{ env.CURRENT_VERSION }}
-        target-version: ${{ env.GH_OLLAMA_OLLAMA_LATEST_TAG }}
-
     - name: Telegram Notification - Latest Tag
-      if: steps.compare-versions.outputs.result == 'newer'
+      if: success() && env.GH_OLLAMA_OLLAMA_LATEST_TAG != env.CURRENT_VERSION
       uses: brainxio/telegram-bot-action@v1
       with:
         bot_token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
