@@ -58,8 +58,8 @@ jobs:
         git config --global user.name "GitHub Actions"
 
         # Tag and push the changes
-        git tag ${GH_OLLAMA_OLLAMA_LATEST_TAG} -m "Release ${GH_OLLAMA_OLLAMA_LATEST_TAG}"
-        git push origin main ${GH_OLLAMA_OLLAMA_LATEST_TAG}
+        git tag -a ${GH_OLLAMA_OLLAMA_LATEST_TAG} -m "Release ${GH_OLLAMA_OLLAMA_LATEST_TAG}"
+        git push origin ${GH_OLLAMA_OLLAMA_LATEST_TAG}
         echo "🤖 Created new tag ${GH_OLLAMA_OLLAMA_LATEST_TAG}."
         echo "🚀 Pushed changes to repository."
 
