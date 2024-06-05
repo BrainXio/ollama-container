@@ -2,6 +2,7 @@
 FROM nvidia/cuda:12.4.1-base-ubuntu22.04 as builder
 
 ARG OLLAMA_VERSION=v0.1.34
+ARG SERVICE_ALIAS=ollama-base
 
 ENV APP_AGENTS=/mnt/c/agents \
     APP_DATA=/mnt/c/data \
@@ -24,7 +25,7 @@ RUN curl -L https://github.com/ollama/ollama/releases/download/${OLLAMA_VERSION}
     chmod +x /usr/bin/ollama
 
 # Create a wrapper script to set custom name
-RUN echo "#!/bin/bash\nexec -a custom-ollama /usr/bin/ollama serve" > /usr/local/bin/start-ollama.sh && \
+RUN echo "#!/bin/bash\nexec -a ${SERVICE_ALIAS} /usr/bin/ollama serve" > /usr/local/bin/start-ollama.sh && \
     chmod +x /usr/local/bin/start-ollama.sh
 
 # Create necessary directories and user in one step
