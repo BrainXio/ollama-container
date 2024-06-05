@@ -6,9 +6,10 @@
     </div>
     <div>
         "A NVIDIA CUDA container for the Ollama application, completely rebuilt with a different level of logic to optimize performance and streamline operations. This Docker container is structured to deploy the Ollama software, leveraging NVIDIA CUDA for enhanced GPU support. The Dockerfile employs a multi-stage build to minimize the final image size while incorporating all necessary dependencies."
-
     </div>
 </div>
+
+## Status
 
 [![Check Ollama Tag](https://github.com/BrainXio/ollama-container/actions/workflows/check-ollama-tag.yml/badge.svg)](https://github.com/BrainXio/ollama-container/actions/workflows/check-ollama-tag.yml) [![Docker-CICD](https://github.com/BrainXio/ollama-container/actions/workflows/docker-cicd.yml/badge.svg)](https://github.com/BrainXio/ollama-container/actions/workflows/docker-cicd.yml)
 
