@@ -1,4 +1,3 @@
 # Changelog
-## Version main
+## Version v0.0.0
 ### Commits
-- fix: Generate changelog to use PAT_TOKEN (#5) (mrrobot0985)
