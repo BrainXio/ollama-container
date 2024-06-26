@@ -22,14 +22,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Wake-up Telegram
-        uses: brainxio/telegram-bot-action@v1
+        uses: brainxio/telegram-bot-action@v2
         with:
           bot_token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           chat_id: ${{ secrets.TELEGRAM_CHAT_ID }}
           message: "🤖"
 
       - name: Workflow Telegram
-        uses: brainxio/telegram-bot-action@v1
+        uses: brainxio/telegram-bot-action@v2
         with:
           bot_token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           chat_id: ${{ secrets.TELEGRAM_CHAT_ID }}
@@ -57,7 +57,7 @@ jobs:
       startsWith(github.ref, 'refs/heads/bugfix/')
     steps:
       - name: Dev-Build Telegram
-        uses: brainxio/telegram-bot-action@v1
+        uses: brainxio/telegram-bot-action@v2
         with:
           bot_token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           chat_id: ${{ secrets.TELEGRAM_CHAT_ID }}
@@ -125,7 +125,7 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/v') 
     steps:
       - name: Prod-Build Telegram
-        uses: brainxio/telegram-bot-action@v1
+        uses: brainxio/telegram-bot-action@v2
         with:
           bot_token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           chat_id: ${{ secrets.TELEGRAM_CHAT_ID }}
@@ -223,7 +223,7 @@ jobs:
       #     fi
 
       - name: Changelog Telegram
-        uses: brainxio/telegram-bot-action@v1
+        uses: brainxio/telegram-bot-action@v2
         with:
           bot_token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           chat_id: ${{ secrets.TELEGRAM_CHAT_ID }}
@@ -255,7 +255,7 @@ jobs:
 
       - name: Dev-Release Telegram
         if: success()
-        uses: brainxio/telegram-bot-action@v1
+        uses: brainxio/telegram-bot-action@v2
         with:
           bot_token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           chat_id: ${{ secrets.TELEGRAM_CHAT_ID }}
@@ -283,7 +283,7 @@ jobs:
 
       - name: Prod-Release Telegram
         if: success()
-        uses: brainxio/telegram-bot-action@v1
+        uses: brainxio/telegram-bot-action@v2
         with:
           bot_token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           chat_id: ${{ secrets.TELEGRAM_CHAT_ID }}
