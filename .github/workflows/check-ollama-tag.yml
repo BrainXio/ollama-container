@@ -41,7 +41,7 @@ jobs:
 
     - name: Telegram Notification - Latest Tag
       if: success() && env.GH_OLLAMA_OLLAMA_LATEST_TAG != env.CURRENT_VERSION
-      uses: brainxio/telegram-bot-action@v1
+      uses: brainxio/telegram-bot-action@v2
       with:
         bot_token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
         chat_id: ${{ secrets.TELEGRAM_CHAT_ID }}
@@ -65,7 +65,7 @@ jobs:
 
     - name: Telegram Notification - New Tag Created
       if: success() && env.GH_OLLAMA_OLLAMA_LATEST_TAG != env.CURRENT_VERSION
-      uses: brainxio/telegram-bot-action@v1
+      uses: brainxio/telegram-bot-action@v2
       with:
         bot_token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
         chat_id: ${{ secrets.TELEGRAM_CHAT_ID }}
@@ -73,7 +73,7 @@ jobs:
 
     - name: Telegram Notification - Error
       if: ${{ failure() }}
-      uses: brainxio/telegram-bot-action@v1
+      uses: brainxio/telegram-bot-action@v2
       with:
         bot_token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
         chat_id: ${{ secrets.TELEGRAM_CHAT_ID }}
