@@ -171,6 +171,8 @@ jobs:
             ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.APP_NAME }}:${{ env.IMAGE_TAG }}
             ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.APP_NAME }}:latest
           cache-from: type=gha
+          build-args:
+            OLLAMA_VERSION=${IMAGE_TAG}
         if: startsWith(github.ref, 'refs/tags/v') 
 
       - name: Save Docker image as an artifact
