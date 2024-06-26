@@ -201,26 +201,26 @@ jobs:
       - name: Switch to main branch
         run: git checkout main
 
-      - name: Git Config
-        run: |
-          git config --global user.email "${{ github.actor }}@users.noreply.github.com"
-          git config --global user.name "BrainXio CI"
+      # - name: Git Config
+      #   run: |
+      #     git config --global user.email "${{ github.actor }}@users.noreply.github.com"
+      #     git config --global user.name "BrainXio CI"
 
-      - name: Create Changelog
-        run: |
-          git fetch --all --tags
-          LATEST_TAG=$(git describe --tags `git rev-list --tags --max-count=1`)
-          echo "# Changelog" > CHANGELOG.md
-          echo "## Version ${GITHUB_REF##*/}" >> CHANGELOG.md
-          echo '### Commits' >> CHANGELOG.md
-          git log $LATEST_TAG..HEAD --pretty=format:"- %s (%an)" >> CHANGELOG.md
-          git add CHANGELOG.md
-          if git diff-index --quiet HEAD --; then
-            echo "No changes to commit"
-          else
-            git commit -m "Update CHANGELOG for ${GITHUB_REF##*/}"
-            git push origin main
-          fi
+      # - name: Create Changelog
+      #   run: |
+      #     git fetch --all --tags
+      #     LATEST_TAG=$(git describe --tags `git rev-list --tags --max-count=1`)
+      #     echo "# Changelog" > CHANGELOG.md
+      #     echo "## Version ${GITHUB_REF##*/}" >> CHANGELOG.md
+      #     echo '### Commits' >> CHANGELOG.md
+      #     git log $LATEST_TAG..HEAD --pretty=format:"- %s (%an)" >> CHANGELOG.md
+      #     git add CHANGELOG.md
+      #     if git diff-index --quiet HEAD --; then
+      #       echo "No changes to commit"
+      #     else
+      #       git commit -m "Update CHANGELOG for ${GITHUB_REF##*/}"
+      #       git push origin main
+      #     fi
 
       - name: Changelog Telegram
         uses: brainxio/telegram-bot-action@v1
